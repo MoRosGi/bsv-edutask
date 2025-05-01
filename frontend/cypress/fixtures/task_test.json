@@ -1,4 +1,6 @@
 {
     "title": "A title for a test task",
-    "url": "https://www.youtube.com/watch?v=ee6SjNN2_uk"
+    "description": "A description for a test task",
+    "url": "https://www.youtube.com/watch?v=ee6SjNN2_uk",
+    "todos": "A todo thingie"
 }
