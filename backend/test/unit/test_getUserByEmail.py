@@ -3,6 +3,7 @@ import unittest.mock as mock
 
 from src.controllers.usercontroller import UserController
 
+# Test comment
 @pytest.fixture
 def mockedDAO():
     return mock.MagicMock()
