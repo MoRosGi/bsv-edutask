@@ -5,7 +5,7 @@ describe('To do creation, delete and edit',() => {
   let task_id // task id
   let task_title // title of the task
 
-  before(function () {
+  beforeEach(function () {
     return cy.fixture('user.json').then((user) => {
       return cy.request({
         method: 'POST',
@@ -26,28 +26,42 @@ describe('To do creation, delete and edit',() => {
           }).then((response) => {
             task_id = response.body[0]["_id"]["$oid"]
             console.log("task_id response:", task_id)
+            cy.visit('http://localhost:3000')
+
+            // detect a div which contains "Email Address", find the input and type
+            cy.contains('div', 'Email Address')
+              .find('input[type=text]')
+              .type(email)
+
+            // submit the form on this page
+            cy.get('form')
+              .submit()
+
+            // click the task created
+            cy.contains('div', task_title)
+            .click()
           })
         })
       })
     })
   })
 
-  beforeEach(function () {
-    cy.visit('http://localhost:3000')
+  // beforeEach(function () {
+  //   cy.visit('http://localhost:3000')
 
-    // detect a div which contains "Email Address", find the input and type
-    cy.contains('div', 'Email Address')
-      .find('input[type=text]')
-      .type(email)
+  //   // detect a div which contains "Email Address", find the input and type
+  //   cy.contains('div', 'Email Address')
+  //     .find('input[type=text]')
+  //     .type(email)
 
-    // submit the form on this page
-    cy.get('form')
-      .submit()
+  //   // submit the form on this page
+  //   cy.get('form')
+  //     .submit()
 
-    // click the task created
-    cy.contains('div', task_title)
-    .click()
-  })
+  //   // click the task created
+  //   cy.contains('div', task_title)
+  //   .click()
+  // })
 
   it('Add button disabled when description empty', () => {
     cy.contains('Add')
@@ -118,7 +132,7 @@ describe('To do creation, delete and edit',() => {
       .should('not.contain', 'Test a todo')
   })
 
-  after(function () {
+  afterEach(function () {
     // clean up by deleting the data created from the database
     cy.request({
       method: 'DELETE',
