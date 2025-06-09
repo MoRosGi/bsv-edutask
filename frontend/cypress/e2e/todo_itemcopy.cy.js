@@ -3,6 +3,7 @@ let uid // user id
 let email // email of the user
 let task_id // task id
 let todo_id // todo id
+let todo
 let task_title // title of the task
 
 beforeEach(function () {
@@ -25,7 +26,8 @@ beforeEach(function () {
           body: task
         }).then((response) => {
           task_id = response.body[0]["_id"]["$oid"]
-          todo_id = response.body[0]["todos"][0]
+          todo_id = response.body[0]["todos"][0]["_id"]["$oid"]
+          todo = response.body[0]["todos"][0]
           console.log("task_id response:", task_id)
           cy.visit('http://localhost:3000')
 
@@ -58,7 +60,6 @@ afterEach(function () {
 })
 
 describe('R8UC1',() => {
-
   it('Add button disabled when description empty', () => {
     cy.contains('Add')
       .should('be.disabled')
@@ -87,39 +88,82 @@ describe('R8UC1',() => {
 })
 
 describe('R8UC2',() => {
-
-  it('Click unchecked todo checked item', () => {
+  it('Click unchecked todo checked item, done set to true', () => {
+    cy.log(todo)
     cy.request({
-          method: 'PUT',
-          url: `http://localhost:5000/todo/byid/${todo_id}`,
-          form: true,
-          body: {"done": true}
-        })
-    cy.get('ul > li')
-      .filter(':has(span)')
-      .last()
-      .children()
-      .eq(0)
-      .click({ force: true })
-      .should('have.class', 'checked')
-      .parents()
-      .children()
-      .eq(1)
-      .should('have.css', 'text-decoration', 'line-through solid rgb(49, 46, 46)')
+      method: 'PUT',
+      url: `http://localhost:5000/todos/byid/${todo_id}`,
+      form: true,
+      body: { data: JSON.stringify({"$set": {"done": false}})
+      }
+    }).then(() => {
+      cy.get('ul > li')
+        .filter(':has(span)')
+        .last()
+        .children()
+        .as('todoItem')
+        .eq(0)
+        .click({ force: true })
+
+      cy.get('@todoItem')
+        .should('have.class', 'checked')
+        .parents()
+        .children()
+        .eq(1)
+        .should('have.css', 'text-decoration', 'line-through solid rgb(49, 46, 46)')
+
+      cy.request({
+        method: 'GET',
+        url: `http://localhost:5000/todos/byid/${todo_id}`
+      }).its('body.done')
+        .should('eq', true)
+
+      // cy.request({
+      //   method: 'GET',
+      //   url: `http://localhost:5000/todos/byid/${todo_id}`
+      // }).then((response) => {
+      //   cy.log(response.body)
+      // })
+    })
   })
 
-  it('Click checked todo unchecked item', () => {
-    cy.get('ul > li')
-      .filter(':has(span)')
-      .last()
-      .children()
-      .eq(0)
-      .click({ force: true })
-      .should('have.class', 'unchecked')
-      .parents()
-      .children()
-      .eq(1)
-      .should('not.have.css', 'text-decoration', 'line-through solid rgb(49, 46, 46)')
+  it('Click checked todo unchecked item, done set to false', () => {
+    cy.log(todo)
+    cy.request({
+      method: 'PUT',
+      url: `http://localhost:5000/todos/byid/${todo_id}`,
+      form: true,
+      body: { data: JSON.stringify({"$set": {"done": true}})
+      }
+    }).then(() => {
+      cy.get('ul > li')
+        .filter(':has(span)')
+        .last()
+        .children()
+        .as('todoItem')
+        .eq(0)
+        .click({ force: true })
+
+      cy.get('@todoItem')
+        .should('have.class', 'unchecked')
+        .parents()
+        .children()
+        .eq(1)
+        .should('not.have.css', 'text-decoration', 'line-through solid rgb(49, 46, 46)')
+
+      cy.request({
+        method: 'GET',
+        url: `http://localhost:5000/todos/byid/${todo_id}`
+      }).its('body.done')
+        .should('eq', false)
+
+      // cy.request({
+      //   method: 'GET',
+      //   url: `http://localhost:5000/todos/byid/${todo_id}`
+      // }).then((response) => {
+      //   cy.log(response.body)
+      // })
+    })
   })
 })
 
